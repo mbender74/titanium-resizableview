@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-titanium-resizableview in titanium-resizableview, no dependencies
