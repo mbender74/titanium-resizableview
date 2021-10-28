@@ -40,7 +40,7 @@ if the edit handles are enabled at start or not
 
 ## Example
 
-```
+```js
 	  var resizableContentView = Ti.UI.createView({
 		width:Ti.UI.SIZE,
 		height:Ti.UI.SIZE,
@@ -91,7 +91,7 @@ if the edit handles are enabled at start or not
 
 	 YOUR_PARENT_VIEW.add(resizableView);
 
-```js
+```
 
 ## License
 
