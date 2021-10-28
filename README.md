@@ -101,4 +101,4 @@ MIT
 
 Marc Bender
 
- original code from [https://github.com/irons163/IRUserResizableView](url)
+original code from https://github.com/irons163/IRUserResizableView
