@@ -91,7 +91,7 @@ if the edit handles are enabled at start or not
 
 	 YOUR_PARENT_VIEW.add(resizableView);
 
-```
+```js
 
 ## License
 
