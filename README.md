@@ -15,26 +15,28 @@ returns the **resizableViewObject**
 
 ## Properties
 
-### `handleSize:Integer `
+### `handleSize:`Integer
 
-### `handleColor:Hex/String`
+### `handleColor:`Hex/String
 
-### `handleEnabled:Bool`
+### `handleEnabled:`Bool
 if the edit handles are enabled at start or not
 
-### `minimumHeight:Integer`
+### `minimumHeight:`Integer
 
-### `minimumWidth:Integer`
+### `minimumWidth:`Integer
 
-### `contentView:Ti.UI.VIEW`
+### `contentView:`Ti.UI.VIEW
 
 
 
 
 ## Events
-### `selected -> returns nothing`
+### `selected` -> returns nothing
 
-### `unselected -> returns nothing`
+### `unselected` -> returns nothing
+
+### `endEditing` -> returns nothing
 
 
 
