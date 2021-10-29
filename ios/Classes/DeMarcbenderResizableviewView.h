@@ -1,8 +1,5 @@
 #import "TiUIView.h"
 #import "DeMarcbenderResizableviewViewProxy.h"
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <TitaniumKit/TiViewController.h>
 
 FOUNDATION_EXPORT double DeMarcbenderResizableviewViewVersionNumber;
 
@@ -19,6 +16,7 @@ typedef struct DeMarcbenderResizableviewViewAnchorPoint {
 
 @interface SPGripViewBorderView : UIView {
     UIColor *handleViewColor;
+    CGFloat kDeMarcbenderResizableviewViewInteractiveBorderSize;
 }
 
 @end
@@ -39,11 +37,14 @@ typedef struct DeMarcbenderResizableviewViewAnchorPoint {
 
 
 @interface DeMarcbenderResizableviewView: TiUIView <UIGestureRecognizerDelegate, DeMarcbenderResizableviewViewDelegate> {
+    bool endEditing;
     CGPoint touchStart;
+    CGFloat handleSize;
     TiViewProxy *contentViewProxy;
     // Used to determine which components of the bounds we'll be modifying, based upon where the user's touch started.
     DeMarcbenderResizableviewViewAnchorPoint anchorPoint;
-    
+    CGFloat kDeMarcbenderResizableviewViewDefaultMinWidth;
+    CGFloat kDeMarcbenderResizableviewViewDefaultMinHeight;
     CGRect appFrame;
     DeMarcbenderResizableviewView *currentlyEditingView;
     DeMarcbenderResizableviewView *lastEditedView;

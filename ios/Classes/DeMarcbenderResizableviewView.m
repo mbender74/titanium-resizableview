@@ -1,18 +1,12 @@
 #import "DeMarcbenderResizableviewView.h"
-#import <TitaniumKit/TiBase.h>
-#import <TitaniumKit/TiProxy.h>
 #import <TitaniumKit/TiUtils.h>
-#import <TitaniumKit/TiViewProxy.h>
 #import "TiPoint.h"
 
 /* Let's inset everything that's drawn (the handles and the content view)
  so that users can trigger a resize from a few pixels outside of
  what they actually see as the bounding box. */
-#define kDeMarcbenderResizableviewViewGlobalInset 5.0
+#define kDeMarcbenderResizableviewViewGlobalInset 1.0
 
-CGFloat kDeMarcbenderResizableviewViewDefaultMinWidth = 48.0;
-CGFloat kDeMarcbenderResizableviewViewDefaultMinHeight = 48.0;
-CGFloat kDeMarcbenderResizableviewViewInteractiveBorderSize = 10.0;
 
 static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewNoResizeAnchorPoint = { 0.0, 0.0, 0.0, 0.0 };
 static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewUpperLeftAnchorPoint = { 1.0, 1.0, -1.0, 1.0 };
@@ -27,9 +21,9 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 
 @implementation SPGripViewBorderView
 
-- (id)initWithFrame:(CGRect)frame withHandleColor:(UIColor*)color {
+- (id)initWithFrame:(CGRect)frame withHandleColor:(UIColor*)color withHandleSize:(CGFloat *)size {
     handleViewColor = color;
-
+    kDeMarcbenderResizableviewViewInteractiveBorderSize = *size;
     if ((self = [super initWithFrame:frame])) {
         // Clear background to ensure the content view shows through.
         self.backgroundColor = [UIColor clearColor];
@@ -105,6 +99,8 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 {
     
     CGRect gripFrame = self.frame;
+    kDeMarcbenderResizableviewViewDefaultMinWidth = 48.0;
+    kDeMarcbenderResizableviewViewDefaultMinHeight = 48.0;
 
     [self setupDefaultAttributes];
     
@@ -166,6 +162,7 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 
 
 
+
 - (void)hideEditingHandlesView:(UITapGestureRecognizer *)recognizer
 {
     [self hideEditingHandles];
@@ -175,7 +172,7 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 
 - (void)setupDefaultAttributes {
     UIColor *handleColor;
-
+    
     if ([self.proxy valueForKey:@"handleColor"]){
         handleColor = [[TiUtils colorValue:[self.proxy valueForKey:@"handleColor"]] _color];
       //  NSLog(@"[ERROR] handleColor ");
@@ -185,35 +182,38 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 
         handleColor = [UIColor blueColor];
     }
-    if ([self.proxy valueForKey:@"handleSize"]){
-      //  NSLog(@"[ERROR] handleSize ");
 
-        kDeMarcbenderResizableviewViewInteractiveBorderSize = [TiUtils floatValue:[self.proxy valueForKey:@"handleSize"]];
+    handleSize = 10;
+
+    if ([self.proxy valueForKey:@"handleSize"]){
+        handleSize = [TiUtils floatValue:[self.proxy valueForKey:@"handleSize"]];
     }
-   
+
     
-    self.borderView = [[SPGripViewBorderView alloc] initWithFrame:CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset, kDeMarcbenderResizableviewViewGlobalInset) withHandleColor:handleColor];
+    self.borderView = [[SPGripViewBorderView alloc] initWithFrame:CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset, kDeMarcbenderResizableviewViewGlobalInset) withHandleColor:handleColor withHandleSize:&(handleSize)];
     [self.borderView setHidden:YES];
     [self addSubview:self.borderView];
    // [borderView bringSubviewToFront:contentView];
     
     if ([self.proxy valueForUndefinedKey:@"minimumHeight"]){
+        kDeMarcbenderResizableviewViewDefaultMinHeight = [TiUtils floatValue:[self.proxy valueForKey:@"minimumHeight"]];
 
-        self.minHeight = [TiUtils floatValue:[self.proxy valueForKey:@"minimumHeight"]] + kDeMarcbenderResizableviewViewInteractiveBorderSize;
+        self.minHeight = [TiUtils floatValue:[self.proxy valueForKey:@"minimumHeight"]] + handleSize;
        // NSLog(@"[ERROR] minimumHeight %f ",self.minHeight);
 
     }
     else {
-        self.minHeight = kDeMarcbenderResizableviewViewDefaultMinHeight + kDeMarcbenderResizableviewViewInteractiveBorderSize;
+        self.minHeight = kDeMarcbenderResizableviewViewDefaultMinHeight + handleSize;
        // NSLog(@"[ERROR] NO minimumHeight %f ",self.minHeight);
 
     }
     
     if ([self.proxy valueForUndefinedKey:@"minimumWidth"]){
-        self.minWidth = [TiUtils floatValue:[self.proxy valueForKey:@"minimumWidth"]] + kDeMarcbenderResizableviewViewInteractiveBorderSize;
+        kDeMarcbenderResizableviewViewDefaultMinWidth = [TiUtils floatValue:[self.proxy valueForKey:@"minimumWidth"]];
+        self.minWidth = [TiUtils floatValue:[self.proxy valueForKey:@"minimumWidth"]] + handleSize;
     }
     else {
-        self.minWidth = kDeMarcbenderResizableviewViewDefaultMinWidth + kDeMarcbenderResizableviewViewInteractiveBorderSize;
+        self.minWidth = kDeMarcbenderResizableviewViewDefaultMinWidth + handleSize;
     }
     
     self.preventsPositionOutsideSuperview = YES;
@@ -221,11 +221,14 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 
 - (void)setContentView:(UIView *)newContentView {
     //LayoutConstraint *oldLayout = [contentViewProxy layoutProperties];
+    [contentViewProxy windowDidOpen];
+    self.backgroundColor = [UIColor clearColor];
     [contentView removeFromSuperview];
     contentView = newContentView;
        
-    contentView.frame = CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset + kDeMarcbenderResizableviewViewInteractiveBorderSize/2, kDeMarcbenderResizableviewViewGlobalInset + kDeMarcbenderResizableviewViewInteractiveBorderSize/2);
+    contentView.frame = CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset + handleSize/2, kDeMarcbenderResizableviewViewGlobalInset + handleSize/2);
     [self addSubview:contentView];
+
     // Ensure the border view is always on top by removing it and adding it to the end of the subview list.
     [self.borderView removeFromSuperview];
     [self addSubview:self.borderView];
@@ -234,16 +237,19 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
     if ([self.proxy valueForUndefinedKey:@"handleEnabled"]){
         if ([TiUtils boolValue:[self.proxy valueForKey:@"handleEnabled"]]==YES){
             [self.borderView setHidden:NO];
-            lastEditedView = self;
-            currentlyEditingView = self;
-            [self.proxy replaceValue:lastEditedView forKey:@"lastResizableView" notification:YES];
+            endEditing = NO;
+            [self.proxy replaceValue:self forKey:@"currentResizableView" notification:YES];
         }
     }
+    lastEditedView = self;
+    currentlyEditingView = self;
+    [self.proxy replaceValue:lastEditedView forKey:@"lastResizableView" notification:YES];
+
 }
 
 - (void)setFrame:(CGRect)newFrame {
     [super setFrame:newFrame];
-    contentView.frame = CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset + kDeMarcbenderResizableviewViewInteractiveBorderSize/2, kDeMarcbenderResizableviewViewGlobalInset + kDeMarcbenderResizableviewViewInteractiveBorderSize/2);
+    contentView.frame = CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset + handleSize/2, kDeMarcbenderResizableviewViewGlobalInset + handleSize/2);
     self.borderView.frame = CGRectInset(self.bounds, kDeMarcbenderResizableviewViewGlobalInset, kDeMarcbenderResizableviewViewGlobalInset);
     [self.borderView setNeedsDisplay];
     [self bringSubviewToFront:self.borderView];
@@ -252,6 +258,8 @@ static DeMarcbenderResizableviewViewAnchorPoint DeMarcbenderResizableviewViewLow
 
 - (void)frameSizeChanged:(CGRect)frame bounds:(CGRect)bounds
 {
+    [super frameSizeChanged:frame bounds:bounds];
+
     NSArray *children = [contentViewProxy children];
     for (TiViewProxy *proxy in children) {
         [proxy reposition];
@@ -327,6 +335,7 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
     if (self.delegate && [self.delegate respondsToSelector:@selector(userResizableViewDidEndEditing:)]) {
         [self.delegate userResizableViewDidEndEditing:self];
     }
+   
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -348,7 +357,7 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
 - (void)resizeUsingTouchLocation:(CGPoint)touchPoint {
     // (1) Update the touch point if we're outside the superview.
     if (self.preventsPositionOutsideSuperview) {
-        CGFloat border = kDeMarcbenderResizableviewViewGlobalInset + kDeMarcbenderResizableviewViewInteractiveBorderSize/2;
+        CGFloat border = kDeMarcbenderResizableviewViewGlobalInset + handleSize/2;
         if (touchPoint.x < border) {
             touchPoint.x = border;
         }
@@ -406,7 +415,12 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
             newHeight = self.superview.bounds.size.height - newY;
         }
     }
-    
+    LayoutConstraint* layoutProperties = [(TiViewProxy *)self.proxy layoutProperties];
+    layoutProperties->left = TiDimensionDip(newX);
+    layoutProperties->top = TiDimensionDip(newY);
+    layoutProperties->height = TiDimensionDip(newHeight);
+    layoutProperties->width = TiDimensionDip(newWidth);
+    [(TiViewProxy *)self.proxy refreshView:nil];
     self.frame = CGRectMake(newX, newY, newWidth, newHeight);
     touchStart = touchPoint;
 }
@@ -430,7 +444,10 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
             newCenter.y = midPointY;
         }
     }
-
+    LayoutConstraint* layoutProperties = [(TiViewProxy *)self.proxy layoutProperties];
+    layoutProperties->left = TiDimensionDip(newCenter.x - self.frame.size.width / 2);
+    layoutProperties->top = TiDimensionDip(newCenter.y - self.frame.size.height / 2);
+    [(TiViewProxy *)self.proxy refreshView:nil];
     self.center = newCenter;
 }
 
@@ -440,6 +457,7 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
     } else {
         [self translateUsingTouchLocation:[[touches anyObject] locationInView:self]];
     }
+    endEditing = YES;
 }
 
 
@@ -450,10 +468,13 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
         lastEditedView = [self.proxy valueForKey:@"lastResizableView"];
         [lastEditedView hideEditingHandles];
     }
+    [currentlyEditingView hideEditingHandles];
+
    // NSLog(@"[ERROR] after userResizableViewDidBeginEditing ");
 
     [self.proxy replaceValue:userResizableView forKey:@"currentResizableView" notification:YES];
     currentlyEditingView = userResizableView;
+    
 }
 
 - (void)userResizableViewDidEndEditing:(DeMarcbenderResizableviewView *)userResizableView {
@@ -461,13 +482,21 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
    // NSLog(@"[ERROR]  userResizableViewDidEndEditing ");
 
     [self.proxy replaceValue:lastEditedView forKey:@"lastResizableView" notification:YES];
+    
+    if (endEditing == YES){
+        endEditing = NO;
+        if ([(TiViewProxy *)self.proxy _hasListeners:@"endEditing"]) {
+            [(TiViewProxy *)self.proxy fireEvent:@"endEditing" withObject:nil];
+        }
+    }
 }
 //
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
     if ([self hitTest:[touch locationInView:self] withEvent:nil]) {
-        if ([self.proxy _hasListeners:@"selected"]) {
-            [self.proxy fireEvent:@"selected" withObject:nil];
+        if ([(TiViewProxy *)self.proxy _hasListeners:@"selected"]) {
+            [(TiViewProxy *)self.proxy fireEvent:@"selected" withObject:nil];
         }
+        endEditing = NO;
         [self.proxy replaceValue:self forKey:@"currentResizableView" notification:YES];
 
         TiViewProxy *parentProxy = [(TiViewProxy *)self.proxy parent];
@@ -475,9 +504,10 @@ typedef struct CGPointDeMarcbenderResizableviewViewAnchorPointPair {
 
         return NO;
     }
-    if ([self.proxy _hasListeners:@"unselected"]) {
-        [self.proxy fireEvent:@"unselected" withObject:nil];
+    if ([(TiViewProxy *)self.proxy _hasListeners:@"unselected"]) {
+        [(TiViewProxy *)self.proxy fireEvent:@"unselected" withObject:nil];
     }
+
     if ([self.proxy valueForUndefinedKey:@"lastResizableView"]){
        // NSLog(@"[ERROR] unselected ");
 
